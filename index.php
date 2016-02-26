@@ -10,8 +10,18 @@
     <script src="./lib/three.js/three.min.js"></script>
     <script src="./lib/three.js/STLLoader.js"></script>
     <script src="./lib/three.js/OrbitControls.js"></script>
+    <script type="text/javascript"></script>
+
+    <div id="content"></div>
+    <input type="range" min="0" max="10" step="0.1" id="openingSize" value="2"
+           oninput="showValue(this.id, 'Opening indicator size', this.value)"/>
+    <span id="openingSizeSpan">Opening indicator size: 2</span>
 
     <script type="text/javascript">
+        function showValue(id, text, newValue)
+        {
+            document.getElementById(id+"Span").innerHTML = text + ": " + newValue;
+        }
     </script>
 
     <script>
@@ -20,15 +30,21 @@
 
         var camera, controls, cameraTarget, scene, renderer;
 
+        var vein;
+
+        var footerHeight = 100;
         init();
         animate();
 
         function init() {
+            container = document.getElementById("content");
 
-            container = document.createElement( 'div' );
-            document.body.appendChild( container );
+//            container = document.createElement( 'div' );
+//            document.body.appendChild( container );
 
-            camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+//            <canvas id="glcanvas" width="1280px" height="720px">
+
+            camera = new THREE.PerspectiveCamera( 35, window.innerWidth / (window.innerHeight - footerHeight), 1, 15 );
             camera.position.set( 3, 2, 3 );
 
             cameraTarget = new THREE.Vector3( 0, 3, 0 );
@@ -45,7 +61,8 @@
             renderer = new THREE.WebGLRenderer( { antialias: true } );
             renderer.setClearColor( 0xfdfd96, 1 );
             renderer.setPixelRatio( window.devicePixelRatio );
-            renderer.setSize( window.innerWidth, window.innerHeight );
+//            renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.setSize( window.innerWidth, window.innerHeight - footerHeight );
 
             controls = new THREE.OrbitControls( camera, renderer.domElement );
             //controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
@@ -61,10 +78,9 @@
 
         function onWindowResize() {
 
-            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = window.innerWidth / (window.innerHeight - footerHeight);
             camera.updateProjectionMatrix();
-
-            renderer.setSize( window.innerWidth, window.innerHeight );
+            renderer.setSize( window.innerWidth, window.innerHeight - footerHeight );
 
         }
 
@@ -83,6 +99,21 @@
 //
 //            camera.lookAt( cameraTarget );
 //
+            var indicatorScale = parseFloat(document.getElementById("openingSize").value);
+//            console.log(" " + indicatorScale)
+
+            if ( vein ) {
+                var veinAccessories = vein.children;
+                if ( veinAccessories.length > 0 ) {
+                    var openingIndicators = veinAccessories[0].children;
+                    if ( openingIndicators.length > 0 )
+                        for (var i = 0, len = openingIndicators.length; i < len; i++) {
+                            var indicator = openingIndicators[i]
+                            indicator.scale.set(indicatorScale,indicatorScale,indicatorScale)
+                        }
+                }
+            }
+
             renderer.render( scene, camera );
 
         }
@@ -93,16 +124,16 @@
 //            var material = new THREE.MeshPhongMaterial( { color: 0xFF0000, specular: 0x111111, shininess: 200 } );
             var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
             loader.load( './getOpenings/ourVein.stl', function ( geometry ) {
-                var vein = new THREE.Mesh( geometry, material );
-                vein.add(openingsSpheres);
+                vein = new THREE.Mesh( geometry, material );
+                vein.add( openingsSpheres );
 
-                vein.position.set( 0, 0, 0 );
+                vein.position.set( 0, -0.75, 0 );
                 vein.rotation.set( - Math.PI / 2, 0, 0 );
                 vein.scale.set( 1, 1, 1 );
 
                 vein.castShadow = true;
                 vein.receiveShadow = true;
-                console.log(vein);
+//                console.log( vein );
                 scene.add( vein );
             } );
         }
@@ -121,14 +152,14 @@
                         color: 0x0000FF
                     });
 
-            var openings = <?= json_encode(getOpenings("./getOpenings/ourVein.stl")) ?>;
-            console.log(openings);
+            var openings = <?= json_encode( getOpenings( "./getOpenings/ourVein.stl" ) ) ?>;
+//            console.log( openings );
             var openingsSpheres = new THREE.Object3D();
 
             for (var i = 0, len = openings.length; i < len; i++) {
                 var opening = openings[i];
 
-                var radius = opening[1]*2;
+                var radius = opening[1];
                 var center = opening[0];
                 var sphere = new THREE.Mesh(
 
@@ -139,10 +170,10 @@
 
                     sphereMaterial);
 
-                sphere.position.set(center[0], center[1], center[2] );
+                sphere.position.set( center[0], center[1], center[2] );
 
                 // add the sphere to the parent object
-                openingsSpheres.add(sphere);
+                openingsSpheres.add( sphere );
             }
 
             return openingsSpheres;
