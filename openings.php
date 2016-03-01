@@ -6,7 +6,12 @@ function getOpenings($stlPath) {
 }
 
 function scanForOpenings($stlPath){
-    $output = shell_exec("./getOpenings/get_openings " . $stlPath);
+    $binaryPath = "./getOpenings/get_openings";
+    $command = $binaryPath . " " . $stlPath;
+    exec($command, $output, $returnValue);
+    if ($returnValue != 0) {
+        throw new Exception("Command: " . $command . " exited with code: " . $returnValue);
+    }
 
     $openings = [];
     foreach (explode("\n\n", $output) as $opening) {
