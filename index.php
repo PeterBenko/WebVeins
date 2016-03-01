@@ -152,28 +152,33 @@
                         color: 0x0000FF
                     });
 
-            var openings = <?= json_encode( getOpenings( "./getOpenings/ourVein.stl" ) ) ?>;
-//            console.log( openings );
             var openingsSpheres = new THREE.Object3D();
 
-            for (var i = 0, len = openings.length; i < len; i++) {
-                var opening = openings[i];
+            var openings = <?= OpeningsScanner::getOpenings( "./getOpenings/ourVein.stl" ) ?>;
+            if ( !openings.error ){
 
-                var radius = opening[1];
-                var center = opening[0];
-                var sphere = new THREE.Mesh(
+//            console.log( openings );
+                for ( var i = 0, len = openings.length; i < len; i++ ) {
+                    var opening = openings[i];
 
-                    new THREE.SphereGeometry(
-                        radius,
-                        segments,
-                        rings),
+                    var radius = opening[1];
+                    var center = opening[0];
+                    var sphere = new THREE.Mesh(
 
-                    sphereMaterial);
+                        new THREE.SphereGeometry(
+                            radius,
+                            segments,
+                            rings),
 
-                sphere.position.set( center[0], center[1], center[2] );
+                        sphereMaterial );
 
-                // add the sphere to the parent object
-                openingsSpheres.add( sphere );
+                    sphere.position.set( center[0], center[1], center[2] );
+
+                    // add the sphere to the parent object
+                    openingsSpheres.add( sphere );
+                }
+            } else {
+                console.error( "Exception in openings.php: " + openings.msg )
             }
 
             return openingsSpheres;
