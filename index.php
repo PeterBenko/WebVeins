@@ -1,5 +1,3 @@
-<?php include "./openings.php" ?>
-
 <html>
 	<head>
 		<title>WebVeins</title>
@@ -10,6 +8,8 @@
     <script src="./lib/three.js/three.min.js"></script>
     <script src="./lib/three.js/STLLoader.js"></script>
     <script src="./lib/three.js/OrbitControls.js"></script>
+    <script src="./openings.js"></script>
+
     <script type="text/javascript"></script>
 
     <div id="content"></div>
@@ -51,11 +51,10 @@
 
             scene = new THREE.Scene();
 
-            var openingSpheres = loadOpenings();
-            loadVein(openingSpheres);
+            loadVein();
 
             // Lights
-            scene.add( new THREE.HemisphereLight( 0xffffff, 0x111122 ) );
+            scene.add( new THREE.HemisphereLight( 0xffffff, 0x0f0f1e ) );
 
             // renderer
             renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -118,14 +117,17 @@
 
         }
 
-        function loadVein(openingsSpheres) {
+        function loadVein() {
             // Add vein mesh
             var loader = new THREE.STLLoader();
 //            var material = new THREE.MeshPhongMaterial( { color: 0xFF0000, specular: 0x111111, shininess: 200 } );
-            var material = new THREE.MeshLambertMaterial( { color: 0xFF0000 } );
-            loader.load( './getOpenings/ourVein.stl', function ( geometry ) {
+            var material = new THREE.MeshLambertMaterial( { color: 0xFF0000, side: THREE.DoubleSide} );
+            loader.load( './Resources/ourVein.stl', function ( geometry ) {
                 vein = new THREE.Mesh( geometry, material );
-                vein.add( openingsSpheres );
+//                vein.add( openingsSpheres );
+                var newGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
+                var openings = loadOpenings( newGeometry );
+                vein.add( openings );
 
                 vein.position.set( 0, -0.75, 0 );
                 vein.rotation.set( - Math.PI / 2, 0, 0 );
@@ -138,49 +140,47 @@
             } );
         }
 
-        function loadOpenings(){
+        function loadOpenings(geometry){
+            geometry.mergeVertices();
+            var scanner = new OpeningsScanner(geometry);
+            var openings = scanner.getOpeningsArray();
+
             // Mark openings
 
             // set up the sphere vars
-            var segments = 16,
-                rings = 16;
+            var segments = 16, rings = 16;
 
             // create the sphere's material
             var sphereMaterial =
                 new THREE.MeshLambertMaterial(
                     {
-                        color: 0x0000FF
+                        color: 0x0000FF,
+                        transparent: true,
+                        opacity: 0.7
                     });
 
             var openingsSpheres = new THREE.Object3D();
 
-            var openings = <?= OpeningsScanner::getOpenings( "./getOpenings/ourVein.stl" ) ?>;
-            if ( !openings.error ){
+            for ( var i = 0, len = openings.length; i < len; i++ ) {
+                var opening = openings[i];
 
-//            console.log( openings );
-                for ( var i = 0, len = openings.length; i < len; i++ ) {
-                    var opening = openings[i];
+                var radius = opening[1];
+                var center = opening[0];
+                var sphere = new THREE.Mesh(
 
-                    var radius = opening[1];
-                    var center = opening[0];
-                    var sphere = new THREE.Mesh(
+                    new THREE.SphereGeometry(
+                        radius,
+                        segments,
+                        rings),
 
-                        new THREE.SphereGeometry(
-                            radius,
-                            segments,
-                            rings),
+                    sphereMaterial );
 
-                        sphereMaterial );
+                sphere.position.set( center.x, center.y, center.z );
 
-                    sphere.position.set( center[0], center[1], center[2] );
-
-                    // add the sphere to the parent object
-                    openingsSpheres.add( sphere );
-                }
-            } else {
-                console.error( "Exception in openings.php: " + openings.msg )
+                // add the sphere to the parent object
+                openingsSpheres.add( sphere );
             }
-
+            console.log(openingsSpheres);
             return openingsSpheres;
         }
 
