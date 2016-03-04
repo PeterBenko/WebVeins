@@ -20,8 +20,21 @@
         <label for="openingSize">Opening indicator size: 2</label>
         <br/>
         <input type="range" min="0.1" max="10" step="0.1" id="openingSize" value="2"
-               oninput="showValue(this.id, 'Opening indicator size', this.value)"/>
+               oninput="showValue(this.id, 'Opening indicator scale factor', this.value)"/>
         <br/>
+
+        <label for="axis">Sorting axis:</label>
+        <select id="axis" onchange="updateOpeningsTable()">
+            <option value="X">X</option>
+            <option value="Y">Y</option>
+            <option value="Z">Z</option>
+        </select>
+        <br/>
+
+        <label for="openings-table"></label><br/>
+        <table id="openings-table" rules="all" style="width: 100%; border: 1px solid black; text-align:center;">
+
+        </table>
     </div>
 
     <script type="text/javascript">
@@ -111,16 +124,17 @@
                  vein.userData.openings.length > 0 )
             {
                 var objectsToCheck = vein.userData.openings;
-
                 var intersects = raycaster.intersectObjects( objectsToCheck );
 
                 if ( intersects.length > 0 ) {
                     var intersection = intersects[ 0 ],
                         obj = intersection.object;
-                    console.log("Clicked: ", obj.userData.id);
+//                    console.log("Clicked: ", obj.userData.id);
                     obj.userData.isOutlet = !obj.userData.isOutlet;
                     var color = obj.userData.isOutlet ? 0x0000ff : 0x00ff00;
                     obj.material.color.setHex(color);
+
+                    updateOpeningsTable();
                 }
             }
         }
@@ -175,6 +189,8 @@
                 vein.castShadow = true;
                 vein.receiveShadow = true;
                 scene.add( vein );
+
+                updateOpeningsTable();
             } );
         }
 
@@ -223,6 +239,95 @@
 
 //            console.log(openingsSpheres);
             return openingsSpheres;
+        }
+
+        function updateOpeningsTable(){
+            var table = document.getElementById("openings-table");
+
+            // Clear the table
+            while(table.hasChildNodes()){
+                table.removeChild(table.firstChild);
+            }
+
+            if ( ! vein ||
+                 ! vein.userData.openings )  // Exit this method if requirements are not met
+            {
+                return;
+            }
+
+            var tableLabel = getLabel("openings-table");
+            var axisSelector = document.getElementById("axis");
+            var axisToSortBy = axisSelector.options[axisSelector.selectedIndex].value;
+
+            var openings = vein.userData.openings;
+            var valueToGet;
+
+            switch ( axisToSortBy ){
+                case "X":
+//                        console.log("Sorting by X");
+                    valueToGet = getX; break;
+                case "Y":
+//                        console.log("Sorting by Y");
+                    valueToGet = getY; break;
+                default:
+//                        console.log("Sorting by Z");
+                    valueToGet = getZ; break;
+            }
+
+            openings.sort( function( a, b ) {
+                return valueToGet( a ) - valueToGet( b );
+            });
+
+            var minimum;
+            var lastValue = valueToGet(openings[0]);
+
+            for (var i = 1; i < openings.length; i++) {
+                var thisValue = valueToGet( openings[i] );
+                var distance = Math.abs( thisValue - lastValue );
+                if (typeof minimum === 'undefined') {
+                    minimum = distance;
+                }
+                minimum = Math.min(distance, minimum);
+                lastValue = thisValue
+            }
+
+            tableLabel.innerHTML = "Minimum distance between openings on " + axisToSortBy + " axis: " + minimum;
+
+
+            var thead = document.createElement('thead');
+            var tr = thead.insertRow( -1 );
+            var td = tr.insertCell( -1 );
+            td.innerHTML = "Opening status";
+            td = tr.insertCell( -1 );
+            td.innerHTML = axisToSortBy + " - value of the opening";
+
+            table.appendChild(thead);
+
+            var tbody = document.createElement('tbody');
+
+            for (i = 0; i < openings.length; i++) {
+                var opening = openings[i];
+                tr = tbody.insertRow( -1 );
+                td = tr.insertCell( -1 );
+                td.innerHTML = opening.userData.isOutlet? "Outlet" : "Inlet";
+
+                td = tr.insertCell( -1 );
+                td.appendChild(document.createTextNode('Cell'));
+                td.innerHTML = valueToGet(opening);
+            }
+            table.appendChild(tbody);
+        }
+
+        function getX( a ){
+            return a.position.x;
+        }
+
+        function getY( a ){
+            return a.position.y;
+        }
+
+        function getZ( a ){
+            return a.position.z;
         }
 
         function getLabel( needle ) {
