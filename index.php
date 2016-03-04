@@ -8,7 +8,8 @@
     <script src="./lib/three.js/three.min.js"></script>
     <script src="./lib/three.js/STLLoader.js"></script>
     <script src="./lib/three.js/OrbitControls.js"></script>
-    <script src="./openings.js"></script>
+    <script src="openingsScanner.js"></script>
+    <script src="openingsManager.js"></script>
 
     <script type="text/javascript"></script>
 
@@ -24,7 +25,7 @@
         <br/>
 
         <label for="axis">Sorting axis:</label>
-        <select id="axis" onchange="updateOpeningsTable()">
+        <select id="axis" onchange="axisChanged()">
             <option value="X">X</option>
             <option value="Y">Y</option>
             <option value="Z">Z</option>
@@ -50,9 +51,9 @@
 
         var camera, controls, cameraTarget, scene, renderer, raycaster;
 
-        var vein;
+        var vein, openingsManager;
 
-        var controlsWidth = 331;
+        var controlsWidth = 332;
 
         init();
         animate();
@@ -119,11 +120,8 @@
 
             raycaster.setFromCamera( mouse, camera );
 
-            if ( vein &&
-                 vein.userData.openings &&
-                 vein.userData.openings.length > 0 )
-            {
-                var objectsToCheck = vein.userData.openings;
+            if ( openingsManager ) {
+                var objectsToCheck = openingsManager.spheresParent.children;
                 var intersects = raycaster.intersectObjects( objectsToCheck );
 
                 if ( intersects.length > 0 ) {
@@ -134,7 +132,7 @@
                     var color = obj.userData.isOutlet ? 0x0000ff : 0x00ff00;
                     obj.material.color.setHex(color);
 
-                    updateOpeningsTable();
+                    openingsManager.updateOpeningsTable();
                 }
             }
         }
@@ -156,14 +154,11 @@
 //
             var indicatorScale = parseFloat(document.getElementById("openingSize").value);
 
-            if ( vein &&
-                 vein.userData.openings &&
-                 vein.userData.openings.length > 0) {
-                var openingIndicators = vein.userData.openings;
-                for (var i = 0, len = openingIndicators.length; i < len; i++) {
-                    var indicator = openingIndicators[i];
+            if ( openingsManager ) {
+                var openings = openingsManager.spheresParent.children;
+                openings.forEach( function( indicator ){
                     indicator.scale.set(indicatorScale, indicatorScale, indicatorScale);
-                }
+                });
             }
 
             renderer.render( scene, camera );
@@ -175,12 +170,8 @@
 //            var material = new THREE.MeshPhongMaterial( { color: 0xFF0000, specular: 0x111111, shininess: 200 } );
             var material = new THREE.MeshLambertMaterial( { color: 0xFF0000, side: THREE.DoubleSide} );
             loader.load( './Resources/ourVein.stl', function ( geometry ) {
-                vein = new THREE.Mesh( geometry, material );
-//                vein.add( openingsSpheres );
-                var newGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
-                var openingsObject = loadOpenings( newGeometry );
-                vein.userData.openings = openingsObject.children;
-                vein.add( openingsObject );
+                var vein = new THREE.Mesh( geometry, material );
+                vein.add( loadOpenings( geometry ) );
 
                 vein.position.set( 0, -0.75, 0 );
                 vein.rotation.set( - Math.PI / 2, 0, 0 );
@@ -190,144 +181,22 @@
                 vein.receiveShadow = true;
                 scene.add( vein );
 
-                updateOpeningsTable();
+                openingsManager.updateOpeningsTable();
             } );
         }
 
-        function loadOpenings(geometry){
-            geometry.mergeVertices();
-            var scanner = new OpeningsScanner(geometry);
-            var openings = scanner.getOpeningsArray();
-
-            // Mark openings
-
-            var openingsSpheres = new THREE.Object3D();
-
-            for ( var i = 0, len = openings.length; i < len; i++ ) {
-                // set up the sphere vars
-                var segments = 16, rings = 16;
-
-                // create the sphere's material
-                var sphereMaterial =
-                    new THREE.MeshLambertMaterial(
-                        {
-                            color: 0x0000FF,
-                            transparent: true,
-                            opacity: 0.7
-                        });
-
-                var opening = openings[i];
-
-                var radius = opening[1];
-                var center = opening[0];
-                var sphere = new THREE.Mesh(
-
-                    new THREE.SphereGeometry(
-                        radius,
-                        segments,
-                        rings),
-
-                    sphereMaterial );
-
-                sphere.userData.id = i;
-                sphere.userData.isOutlet = true;
-
-                sphere.position.set( center.x, center.y, center.z );
-                // add the sphere to the parent object
-                openingsSpheres.add( sphere );
-            }
-
-//            console.log(openingsSpheres);
-            return openingsSpheres;
-        }
-
-        function updateOpeningsTable(){
+        function loadOpenings(geometry) {
             var table = document.getElementById("openings-table");
-
-            // Clear the table
-            while(table.hasChildNodes()){
-                table.removeChild(table.firstChild);
-            }
-
-            if ( ! vein ||
-                 ! vein.userData.openings )  // Exit this method if requirements are not met
-            {
-                return;
-            }
-
-            var tableLabel = getLabel("openings-table");
-            var axisSelector = document.getElementById("axis");
-            var axisToSortBy = axisSelector.options[axisSelector.selectedIndex].value;
-
-            var openings = vein.userData.openings;
-            var valueToGet;
-
-            switch ( axisToSortBy ){
-                case "X":
-//                        console.log("Sorting by X");
-                    valueToGet = getX; break;
-                case "Y":
-//                        console.log("Sorting by Y");
-                    valueToGet = getY; break;
-                default:
-//                        console.log("Sorting by Z");
-                    valueToGet = getZ; break;
-            }
-
-            openings.sort( function( a, b ) {
-                return valueToGet( a ) - valueToGet( b );
-            });
-
-            var minimum;
-            var lastValue = valueToGet(openings[0]);
-
-            for (var i = 1; i < openings.length; i++) {
-                var thisValue = valueToGet( openings[i] );
-                var distance = Math.abs( thisValue - lastValue );
-                if (typeof minimum === 'undefined') {
-                    minimum = distance;
-                }
-                minimum = Math.min(distance, minimum);
-                lastValue = thisValue
-            }
-
-            tableLabel.innerHTML = "Minimum distance between openings on " + axisToSortBy + " axis: " + minimum;
-
-
-            var thead = document.createElement('thead');
-            var tr = thead.insertRow( -1 );
-            var td = tr.insertCell( -1 );
-            td.innerHTML = "Opening status";
-            td = tr.insertCell( -1 );
-            td.innerHTML = axisToSortBy + " - value of the opening";
-
-            table.appendChild(thead);
-
-            var tbody = document.createElement('tbody');
-
-            for (i = 0; i < openings.length; i++) {
-                var opening = openings[i];
-                tr = tbody.insertRow( -1 );
-                td = tr.insertCell( -1 );
-                td.innerHTML = opening.userData.isOutlet? "Outlet" : "Inlet";
-
-                td = tr.insertCell( -1 );
-                td.appendChild(document.createTextNode('Cell'));
-                td.innerHTML = valueToGet(opening);
-            }
-            table.appendChild(tbody);
+            var selector = document.getElementById("axis");
+            var newGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
+            openingsManager = new OpeningsManager(newGeometry, table, selector);
+            return openingsManager.spheresParent;
         }
 
-        function getX( a ){
-            return a.position.x;
-        }
-
-        function getY( a ){
-            return a.position.y;
-        }
-
-        function getZ( a ){
-            return a.position.z;
+        function axisChanged(){
+            if ( openingsManager ){
+                openingsManager.updateOpeningsTable();
+            }
         }
 
         function getLabel( needle ) {
