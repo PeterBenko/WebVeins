@@ -3,9 +3,10 @@
 <geometry>
     <mesh> ./ourVein.stl </mesh>
 
-    <!-- Inlet diameter (m). This parameter has no impact on the simulation,
+    <!-- Inlet diameter (m). This parameter has NO impact on the simulation,
     and is only used to display the Reynolds number. -->
     <inletDiameter> 0.012 </inletDiameter>
+
     <!-- Average inlet velocity in physical units (m/s). -->
     <!-- averageInletVelocity> 0.071176 </averageInletVelocity --> 
     <averageInletVelocity> 0.02 </averageInletVelocity>
@@ -14,10 +15,10 @@
          It must not be provided by the user closed. -->
     <openings>
         <!-- 0 means x-direction, 1 means y-direction and 2 means z-direction. -->
-        <sortDirection> 2 </sortDirection>
+        <sortDirection> **_AXIS_ID_** </sortDirection>
         <!-- According to the sortDirection, the user provides which openings are
              inlets and which are outlets. -->
-        <type> Inlet Outlet Outlet Outlet Outlet Outlet Outlet Outlet </type>
+        <type> **_OPENINGS_** </type>
     </openings>
 
 </geometry>

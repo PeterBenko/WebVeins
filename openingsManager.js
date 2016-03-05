@@ -58,13 +58,13 @@ function OpeningsManager(geometry, openingsTable, axisSelector){
 
         switch ( axisToSortBy ){
             case "X":
-//                        console.log("Sorting by X");
+                        //console.log("Sorting by X");
                 valueToGet = getX; break;
             case "Y":
-//                        console.log("Sorting by Y");
+                        //console.log("Sorting by Y");
                 valueToGet = getY; break;
-            default:
-//                        console.log("Sorting by Z");
+            case "Z":
+                        //console.log("Sorting by Z", axisToSortBy);
                 valueToGet = getZ; break;
         }
 
@@ -81,6 +81,10 @@ function OpeningsManager(geometry, openingsTable, axisSelector){
         }
 
         return tableViewModel;
+    };
+
+    this.getAxisName = function() {
+        return axisSelector.options[axisSelector.selectedIndex].value;
     };
 
     var getMinimumDistance = function( table, columnIndex ){
