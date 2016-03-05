@@ -47,7 +47,7 @@
 
     <script type="text/javascript">
 
-    	var stlToLoad = './resources/ourVein.stl';
+    	var stlToLoad = './res/ourVein.stl';
         
         var container;
         var camera, controls, cameraTarget, scene, renderer, raycaster;
