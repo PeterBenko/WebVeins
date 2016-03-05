@@ -47,12 +47,12 @@
 
     <script type="text/javascript">
 
+    	var stlToLoad = './resources/ourVein.stl';
+        
         var container;
-
         var camera, controls, cameraTarget, scene, renderer, raycaster;
-
         var vein, openingsManager;
-
+        
         var controlsWidth = 332;
 
         init();
@@ -169,7 +169,7 @@
             var loader = new THREE.STLLoader();
 //            var material = new THREE.MeshPhongMaterial( { color: 0xFF0000, specular: 0x111111, shininess: 200 } );
             var material = new THREE.MeshLambertMaterial( { color: 0xFF0000, side: THREE.DoubleSide} );
-            loader.load( './Resources/ourVein.stl', function ( geometry ) {
+            loader.load( stlToLoad, function ( geometry ) {
                 var vein = new THREE.Mesh( geometry, material );
                 vein.add( loadOpenings( geometry ) );
 
