@@ -36,7 +36,9 @@
             <table id="openings-table" rules="all" style="width: 100%; border: 1px solid black; text-align:center;">
 
             </table>
+            <br/>
             <button onclick="postOpenings()">Submit</button>
+            <button onclick="startCalculation()">Start calculation</button>
         </div>
 
 
@@ -215,33 +217,38 @@
             function postOpenings() {
                 if (!openingsManager) return;
 
-                var http = new XMLHttpRequest();
-
-                var url = "palabos.php";
-                var params = [];
+                var url = "palabos/generateParameters.php";
 
                 var axis = openingsManager.getAxisName();
-                var tableViewModel = openingsManager.getTableViewModel(axis);
 
+                var tableViewModel = openingsManager.getTableViewModel(axis);
+                var params = [];
                 tableViewModel.forEach( function(row) {
                    params.push(row[0]);
                 });
 
-                http.open("POST", url, true);
+                var toSend = "openings=" + JSON.stringify(params);
+                toSend += "&axis=" + axis;
+                post(url, toSend);
+            }
 
+            function startCalculation(){
+                location.href='./palabos/startCalculation.php';
+            }
+
+            function post(destination, parameters){
+                var http = new XMLHttpRequest();
+
+                http.open("POST", destination, true);
                 http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
                 http.onreadystatechange = function() {//Call a function when the state changes.
                     if(http.readyState == 4 && http.status == 200) {
                         alert(http.responseText);
                     }
                 };
+                http.send(parameters);
 
-                var toSend = "openings=" + JSON.stringify(params);
-                toSend += "&axis=" + axis;
-                http.send(toSend);
             }
-
         </script>
     </body>
 </html>

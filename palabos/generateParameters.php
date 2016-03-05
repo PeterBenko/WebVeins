@@ -1,6 +1,6 @@
 <?php
-define('templateFileLocation', "./palabos/templates/param.xml.template");
-define('temporaryParametersLocation', "./palabos/tmp/");
+define('TEMPLATE_FILE', "./templates/param.xml.template");
+define('TEMPORARY_FOLDER', "./tmp/");
 
 //var_dump($_POST);
 $openings = json_decode($_POST['openings']);
@@ -17,15 +17,15 @@ switch ($axisName) {
         break;
 }
 
-$template = file_get_contents(templateFileLocation) or die("Unable read template!");
+$template = file_get_contents(TEMPLATE_FILE) or die("Unable read template!");
 $filledTemplate = str_replace("**_OPENINGS_**", implode(" ", $openings), $template);
 $filledTemplate = str_replace("**_AXIS_ID_**", $axisIndex, $filledTemplate);
 
-if (!file_exists(temporaryParametersLocation)) {
-    mkdir(temporaryParametersLocation, 0777, true);
+if (!file_exists(TEMPORARY_FOLDER)) {
+    mkdir(TEMPORARY_FOLDER, 0777, true);
 }
 
-$parametersFile = temporaryParametersLocation."param.xml";
+$parametersFile = TEMPORARY_FOLDER."param.xml";
 $tempFile = fopen( $parametersFile, "w");
 if ($tempFile){
     fwrite($tempFile, $filledTemplate);
