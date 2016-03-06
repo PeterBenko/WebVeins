@@ -9,7 +9,7 @@
 
     <!-- Average inlet velocity in physical units (m/s). -->
     <!-- averageInletVelocity> 0.071176 </averageInletVelocity --> 
-    <averageInletVelocity> 0.02 </averageInletVelocity>
+    <averageInletVelocity> **_INLET_VELOCITY_** </averageInletVelocity> <!-- Default value is 0.02 -->
 
     <!-- The STL geometry provided by the user has openings (inlets and outlets).
          It must not be provided by the user closed. -->

@@ -1,4 +1,4 @@
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 	<head>
 		<title>WebVeins</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -18,6 +18,9 @@
         </div>
 
         <div id="controls" style="width: 300px; float:left">
+            <label for="inlet-velocity"> Average inlet velocity (in m/s): </label>
+            <input type="number" id="inlet-velocity" style="width: 8em" min="0" step="0.001" value="0.02"> <br/>
+
             <label for="openingSize">Opening indicator size: 2</label>
             <br/>
             <input type="range" min="0.1" max="10" step="0.1" id="openingSize" value="2"
@@ -220,6 +223,8 @@
                 var url = "palabos/generateParameters.php";
 
                 var axis = openingsManager.getAxisName();
+                var velocity = document.getElementById("inlet-velocity").value;
+
 
                 var tableViewModel = openingsManager.getTableViewModel(axis);
                 var params = [];
@@ -229,6 +234,7 @@
 
                 var toSend = "openings=" + JSON.stringify(params);
                 toSend += "&axis=" + axis;
+                toSend += "&velocity=" + velocity;
                 post(url, toSend);
             }
 
