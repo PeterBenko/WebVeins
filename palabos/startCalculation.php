@@ -18,42 +18,40 @@ foreach($files as $file){ // iterate files
   if(is_file($file))
     unlink($file); // delete file
 }
+
 echo "Results folder cleared! <br/>";
 
-$command = BINARY_PATH . " " . PARAMETERS;
-echo $command;
-
-$descriptorspec = array(
-    1 => array("pipe", "w"),
-    2 => array("pipe", "a")
-);
 $pipes = [];
 
-$dir = dirname(__FILE__). "/" . RESULTS_FOLDER;
-echo " in " . $dir + "<br/>";
-
-$process = proc_open($command, $descriptorspec, $pipes, $dir);
-
-/*
+//COMMENT LINES TO ENABLE REAL FUNCTIONALITY
+$dir = './';
+$command = 'php';
 $descriptorspec = array(
     0 => array("pipe", "r"),
     1 => array("pipe", "w"),
     2 => array("pipe", "a")
 );
-$pipes = [];
-$process = proc_open('php', $descriptorspec, $pipes, null, null);
+$process = proc_open('php', $descriptorspec, $pipes, $dir);
 
-fwrite($pipes[0], '<?php print_r($_ENV); ?>');
+fwrite($pipes[0], '<?php phpinfo(); ?>');
 fclose($pipes[0]);
-*/
+
+// UNCOMMENT FOLLOWING LINES FOR REAL FUNCTIONALITY
+// $dir = dirname(__FILE__). "/" . RESULTS_FOLDER;
+// $command = BINARY_PATH . " " . PARAMETERS;
+
+// $descriptorspec = array(
+//     1 => array("pipe", "w"),
+//     2 => array("pipe", "a")
+// );
+// $process = proc_open($command, $descriptorspec, $pipes, $dir);
+
+echo "Command executed: " . $command  ." in " . $dir . "<br/>";
 
 $status = -2;
 if (is_resource($process)) {
     do {
-
         echo fgets($pipes[1]) . "<br/>"; //will wait for a end of line
-
-
         $status = proc_get_status($process);
 
     } while ($status['running']);
@@ -68,4 +66,3 @@ fclose($pipes[2]);
 $return_value = ($status["running"] ? proc_close($process) : $status["exitcode"] );
 
 echo "Process exited with $return_value\n";
-
