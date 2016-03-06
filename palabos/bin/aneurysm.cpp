@@ -398,25 +398,6 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
                   << currentTime << endl;
 
             writeImages(boundaryCondition, level, out, location, dx, dt);
-
-            // std::vector<std::string> scalarNames;
-            // scalarNames.push_back("pressure");
-            // scalarNames.push_back("wss");
-            // std::vector<T> scalarFactor;
-            // scalarFactor.push_back(util::sqr(dx/dt)*fluidDensity);
-            // scalarFactor.push_back(util::sqr(dx/dt)*fluidDensity);
-
-            // std::vector<std::string> vectorNames;
-            // vectorNames.push_back("force");
-            // std::vector<T> vectorFactor;
-            // vectorFactor.push_back(util::sqr(dx/dt)*fluidDensity);
-
-            // bool dynamicMesh = false;
-            // writeSurfaceVTK (
-            //         boundary,
-            //         *computeSurfaceForce( boundary, voxelizedDomain, *lattice, model->velIsJ(), dynamicMesh ),
-            //         scalarNames, vectorNames, "surface_"+util::val2str(level)+"_"+util::val2str(out)+".vtk", dynamicMesh, 0,
-            //         scalarFactor, vectorFactor );
             ++out;
         }
         // else {

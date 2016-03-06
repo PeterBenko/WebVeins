@@ -30,6 +30,9 @@ $tempFile = fopen( $parametersFile, "w");
 if ($tempFile){
     fwrite($tempFile, $filledTemplate);
     fclose($tempFile);
+    echo "Data successfully submitted!";
+    return;
+} else {
+    echo "Could not generate file!";
+    return;
 }
-
-echo "Data successfully submitted!\n";

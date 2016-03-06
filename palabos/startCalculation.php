@@ -1,12 +1,27 @@
 <?php
-define('BINARY_PATH', "./bin/aneurysm");
-define('PARAMETERS', "./tmp/param.xml");
+define('RESULTS_FOLDER', "results");
+// These two are relative to the results folder as the command will be executed there
+define('BINARY_PATH', "../bin/aneurysm");
+define('PARAMETERS', "../tmp/param.xml");
 
-if (!file_exists(PARAMETERS)) {
-    echo "Parameters file missing";
-    return;
+// if (!file_exists(PARAMETERS)) {
+//     echo "Parameters file missing!";
+//     return;
+// }
+
+$relativeResults = "./" . RESULTS_FOLDER;
+if (!file_exists( $relativeResults)) {
+    mkdir($relativeResults, 0777, true);
 }
+$files = glob("./" . RESULTS_FOLDER . "/*"); // get all file names
+foreach($files as $file){ // iterate files
+  if(is_file($file))
+    unlink($file); // delete file
+}
+echo "Results folder cleared! <br/>";
+
 $command = BINARY_PATH . " " . PARAMETERS;
+echo $command;
 
 $descriptorspec = array(
     1 => array("pipe", "w"),
@@ -14,7 +29,10 @@ $descriptorspec = array(
 );
 $pipes = [];
 
-$process = proc_open($command, $descriptorspec, $pipes, null, null);
+$dir = dirname(__FILE__). "/" . RESULTS_FOLDER;
+echo " in " . $dir + "<br/>";
+
+$process = proc_open($command, $descriptorspec, $pipes, $dir);
 
 /*
 $descriptorspec = array(

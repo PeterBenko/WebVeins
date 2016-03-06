@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
 <geometry>
-    <mesh> ../../res/ourVein.stl </mesh>
+    <mesh> ../../res/ourVein.stl </mesh> <!-- Location relative to the location where binary will be executed -->
 
     <!-- Inlet diameter (m). This parameter has NO impact on the simulation,
     and is only used to display the Reynolds number. -->
@@ -18,7 +18,7 @@
         <sortDirection> 0 </sortDirection>
         <!-- According to the sortDirection, the user provides which openings are
              inlets and which are outlets. -->
-        <type> Outlet Outlet Outlet Outlet Outlet Outlet Outlet Outlet Outlet Outlet </type>
+        <type> Outlet Outlet Outlet Outlet Outlet Inlet Outlet Outlet Outlet Outlet </type>
     </openings>
 
 </geometry>
