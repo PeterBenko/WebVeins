@@ -10,6 +10,7 @@
         <script src="./lib/three.js/OrbitControls.js"></script>
         <script src="openingsScanner.js"></script>
         <script src="openingsManager.js"></script>
+        <script src="httpCommunication.js"></script>
 
         <script type="text/javascript"></script>
 
@@ -235,25 +236,11 @@
                 var toSend = "openings=" + JSON.stringify(params);
                 toSend += "&axis=" + axis;
                 toSend += "&velocity=" + velocity;
-                post(url, toSend);
+                postAndAlert(url, toSend);
             }
 
             function startCalculation(){
                 location.href='./palabos/startCalculation.php';
-            }
-
-            function post(destination, parameters){
-                var http = new XMLHttpRequest();
-
-                http.open("POST", destination, true);
-                http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                http.onreadystatechange = function() {//Call a function when the state changes.
-                    if(http.readyState == 4 && http.status == 200) {
-                        alert(http.responseText);
-                    }
-                };
-                http.send(parameters);
-
             }
         </script>
     </body>
