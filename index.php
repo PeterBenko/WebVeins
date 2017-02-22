@@ -71,7 +71,7 @@
                 container = document.getElementById("content");
                 container.addEventListener( 'mousedown', onDocumentMouseDown, false );
 
-                var width = window.innerWidth - controlsWidth;
+                var width = window.innerWidth - controlsWidth - 1;
                 var height = window.innerHeight;
 
                 container.style.width = width + "px";
@@ -141,7 +141,7 @@
                         var color = obj.userData.isOutlet ? 0x0000ff : 0x00ff00;
                         obj.material.color.setHex(color);
 
-                        openingsManager.updateOpeningsTable();
+                        openingsManager.updateOpeningsTable(getAxisValue());
                     }
                 }
             }
@@ -190,24 +190,30 @@
                     vein.receiveShadow = true;
                     scene.add( vein );
 
-                    openingsManager.updateOpeningsTable();
+                    openingsManager.updateOpeningsTable(getAxisValue());
                 } );
             }
 
             function loadOpenings(geometry) {
                 var table = document.getElementById("openings-table");
-                var selector = document.getElementById("axis");
                 var newGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
-                openingsManager = new OpeningsManager(newGeometry, table, selector);
+                openingsManager = new OpeningsManager(newGeometry, table);
                 return openingsManager.spheresParent;
             }
 
             function axisChanged(){
                 if ( openingsManager ){
-                    openingsManager.updateOpeningsTable();
+                    openingsManager.updateOpeningsTable(getAxisValue());
                 }
             }
 
+            function getAxisValue(){
+                var axisSelector = document.getElementById("axis");
+                var value = axisSelector.options[axisSelector.selectedIndex].value;
+                console.debug("Current axis: " + value);
+                return value;
+            }
+            
             function getLabel( needle ) {
                 var labels = document.getElementsByTagName("label");
                 for (var i = 0; i < labels.length; i++) {
@@ -223,11 +229,10 @@
 
                 var url = "palabos/generateParameters.php";
 
-                var axis = openingsManager.getAxisName();
                 var velocity = document.getElementById("inlet-velocity").value;
 
-
-                var tableViewModel = openingsManager.getTableViewModel(axis);
+                var axis = getAxisValue();
+                var tableViewModel = openingsManager.getOpenings(axis);
                 var params = [];
                 tableViewModel.forEach( function(row) {
                    params.push(row[0]);
@@ -238,6 +243,9 @@
                 toSend += "&velocity=" + velocity;
                 postAndAlert(url, toSend);
             }
+        </script>
+        
+        <script type="text/javascript">
 
             function startCalculation(){
                 location.href='./palabos/startCalculation.php';

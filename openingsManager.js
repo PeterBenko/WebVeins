@@ -1,4 +1,4 @@
-function OpeningsManager(geometry, openingsTable, axisSelector){
+function OpeningsManager(geometry, openingsTable){
     geometry.mergeVertices();
     var scanner = new OpeningsScanner(geometry);
     var openings = scanner.getOpeningsArray();
@@ -42,17 +42,15 @@ function OpeningsManager(geometry, openingsTable, axisSelector){
 
 //            console.log(spheresParent);
 
-    this.updateOpeningsTable = function(){
+    this.updateOpeningsTable = function(axisToSortBy){
         // Clear the table
-        var axisToSortBy = axisSelector.options[axisSelector.selectedIndex].value;
-
-        var tableViewModel = this.getTableViewModel( axisToSortBy );
+        var tableViewModel = this.getOpenings( axisToSortBy );
         var minimum = getMinimumDistance(tableViewModel, 1);
 
         createTable(tableViewModel, axisToSortBy, minimum);
     };
 
-    this.getTableViewModel = function( axisToSortBy ) {
+    this.getOpenings = function( axisToSortBy ) {
         var openings = this.spheresParent.children;
         var valueToGet;
 
@@ -81,10 +79,6 @@ function OpeningsManager(geometry, openingsTable, axisSelector){
         }
 
         return tableViewModel;
-    };
-
-    this.getAxisName = function() {
-        return axisSelector.options[axisSelector.selectedIndex].value;
     };
 
     var getMinimumDistance = function( table, columnIndex ){
