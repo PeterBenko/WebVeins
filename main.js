@@ -1,0 +1,217 @@
+
+var stlToLoad = './res/ourVein.stl';
+
+var container;
+var camera, controls, cameraTarget, scene, renderer, raycaster;
+var vein, openingsManager;
+
+var controlsWidth = 332;
+
+THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
+
+init();
+animate();
+
+function init() {
+    container = document.getElementById("content");
+    container.addEventListener( 'mousedown', onDocumentMouseDown, false );
+
+    var width = window.innerWidth - controlsWidth - 1;
+    var height = window.innerHeight;
+
+    container.style.width = width + "px";
+
+    camera = new THREE.PerspectiveCamera( 35, width / height, 1, 15 );
+    camera.position.set( 3, 2, 4 );
+
+    cameraTarget = new THREE.Vector3( 0, 3, 0 );
+
+    scene = new THREE.Scene();
+
+    loadVein();
+
+    var helper = new THREE.AxisHelper( 0.1 );
+    scene.add( helper );
+
+    // Lights
+    scene.add( new THREE.HemisphereLight( 0xffffff, 0x0f0f1e ) );
+
+    // Raycaster
+    raycaster = new THREE.Raycaster();
+
+    // renderer
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    renderer.setClearColor( 0xfdfd96, 1 );
+    renderer.setPixelRatio( window.devicePixelRatio );
+//            renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( width, height );
+
+    controls = new THREE.OrbitControls( camera, renderer.domElement );
+    //controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
+    controls.enableZoom = true;
+
+    container.appendChild( renderer.domElement );
+
+    window.addEventListener( 'resize', onWindowResize, false );
+}
+
+function onWindowResize() {
+
+    var width = window.innerWidth - controlsWidth;
+    var height = window.innerHeight;
+    document.getElementById("content").style.width = width + "px";
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize( width, height);
+}
+
+function onDocumentMouseDown( event ) {
+    event.preventDefault();
+
+    var mouse = new THREE.Vector2(
+        (  event.layerX  / renderer.domElement.width ) * 2 - 1,
+        - (  event.layerY  / renderer.domElement.height ) * 2 + 1);
+
+    raycaster.setFromCamera( mouse, camera );
+
+    if ( openingsManager ) {
+        var objectsToCheck = openingsManager.spheresParent.children;
+        var intersects = raycaster.intersectObjects( objectsToCheck );
+
+        if ( intersects.length > 0 ) {
+            var intersection = intersects[ 0 ],
+                obj = intersection.object;
+//                    console.log("Clicked: ", obj.userData.id);
+            obj.userData.isOutlet = !obj.userData.isOutlet;
+            var color = obj.userData.isOutlet ? 0x0000ff : 0x00ff00;
+            obj.material.color.setHex(color);
+
+            openingsManager.updateOpeningsTable(getAxisValue());
+        }
+    }
+}
+
+function indicatorScaleChanged(sender, text)
+{
+    var indicatorScale = sender.value;
+    getLabel(sender.id).innerHTML = text + ": " + indicatorScale;
+
+    if ( openingsManager ) {
+        var openings = openingsManager.spheresParent.children;
+        openings.forEach( function( indicator ){
+            indicator.scale.set(indicatorScale, indicatorScale, indicatorScale);
+        });
+    }
+}
+
+function animate() {
+    requestAnimationFrame( animate );
+    controls.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
+    render();
+}
+
+function render() {
+
+//    var timer = Date.now() * 0.0005;
+//
+//    camera.position.x = Math.cos( timer ) * 3;
+//    camera.position.z = Math.sin( timer ) * 3;
+//
+//    camera.lookAt( cameraTarget );
+//
+    renderer.render( scene, camera );
+}
+
+function loadVein() {
+    // Add vein mesh
+    var loader = new THREE.STLLoader();
+//            var material = new THREE.MeshPhongMaterial( { color: 0xFF0000, specular: 0x111111, shininess: 200 } );
+    var material = new THREE.MeshLambertMaterial( { color: 0xFF0000, side: THREE.DoubleSide} );
+    loader.load( stlToLoad, function ( veinGeometry ) {
+        var vein = new THREE.Mesh( veinGeometry, material );
+
+        var bbox = new THREE.Box3().setFromObject(vein);
+        var bboxGeometry = new THREE.BoxGeometry(
+                bbox.max.x - bbox.min.x,
+                bbox.max.y - bbox.min.y,
+                bbox.max.z - bbox.min.z
+            );
+        bboxGeometry.translate(
+            (bbox.max.x - bbox.min.x)/2 + bbox.min.x,
+            (bbox.max.y - bbox.min.y)/2 + bbox.min.y,
+            (bbox.max.z - bbox.min.z)/2 + bbox.min.z
+        );
+        var bboxWireframeGeometry = new THREE.EdgesGeometry( bboxGeometry ); // or WireframeGeometry( geometry )
+        var bboxMaterial = new THREE.LineBasicMaterial( {color: 0x0, transparent: true, opacity: 1.0} );
+        var bboxMesh = new THREE.LineSegments( bboxWireframeGeometry, bboxMaterial );
+
+        vein.translateZ(-(bbox.max.z - bbox.min.z)/2);
+        bboxMesh.translateZ(-(bbox.max.z - bbox.min.z)/2);
+
+        vein.castShadow = true;
+        vein.receiveShadow = true;
+
+        vein.add( loadOpenings( veinGeometry ) );
+        scene.add( vein );
+    
+
+        scene.add ( bboxMesh );
+
+        openingsManager.updateOpeningsTable(getAxisValue());
+    } );
+}
+
+function loadOpenings(geometry) {
+    var table = document.getElementById("openings-table");
+    var newGeometry = new THREE.Geometry().fromBufferGeometry( geometry );
+    openingsManager = new OpeningsManager(newGeometry, table);
+    return openingsManager.spheresParent;
+}
+
+function axisChanged(){
+    if ( openingsManager ){
+        openingsManager.updateOpeningsTable(getAxisValue());
+    }
+}
+
+function getAxisValue(){
+    var axisSelector = document.getElementById("axis");
+    var value = axisSelector.options[axisSelector.selectedIndex].value;
+    console.debug("Current axis: " + value);
+    return value;
+}
+
+function getLabel( needle ) {
+    var labels = document.getElementsByTagName("label");
+    for (var i = 0; i < labels.length; i++) {
+        var label = labels[i];
+        if (label.getAttribute("for") == needle) {
+            return label;
+        }
+    }
+}
+
+function postOpenings() {
+    if (!openingsManager) return;
+
+    var url = "palabos/generateParameters.php";
+
+    var velocity = document.getElementById("inlet-velocity").value;
+
+    var axis = getAxisValue();
+    var tableViewModel = openingsManager.getOpenings(axis);
+    var params = [];
+    tableViewModel.forEach( function(row) {
+       params.push(row[0]);
+    });
+
+    var toSend = "openings=" + JSON.stringify(params);
+    toSend += "&axis=" + axis;
+    toSend += "&velocity=" + velocity;
+    toSend += "&slice_direction=" + "XY";
+    toSend += "&slice_position=" + JSON.stringify({x: "0.5", y: "0.5", z: "0.5"});
+    postAndAlert(url, toSend);
+}
