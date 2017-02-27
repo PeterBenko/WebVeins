@@ -29,6 +29,8 @@
   * Make sure to unpack the file aneurysm.stl.tgz before running the
   * simulation.
   **/
+#include <stdexcept>
+#include <csignal>
 
 #include "palabos3D.h"
 #include "palabos3D.hh"
@@ -54,6 +56,16 @@ bool useRegularizedWall = false;
 bool useIncompressible = false;
 bool poiseuilleInlet = false;
 bool convectiveScaling = false;
+
+enum SliceDirection { 
+    XYSliceDirection, 
+    XZSliceDirection, 
+    YZSliceDirection 
+};
+
+SliceDirection sliceDirection;
+Array<T,3> slicePosition;
+
 
 T kinematicViscosity       = 0.;
 T averageInletVelocity     = 0.;
@@ -132,59 +144,14 @@ void setOpenings (
     }
 }
 
-// This function outputs velocity, vorticity and pressure data, at selected
-//   points of the computational domain, given their coordinates in physical units.
-std::vector<T> pointMeasures (
-        MultiBlockLattice3D<T,DESCRIPTOR>& lattice,
-        Array<T,3> location, T dx, T dt )
-{
-    std::vector<Array<T,3> > physicalPositions, positions;
-    physicalPositions.push_back(Array<T,3>(0.022046, 0.015072, 0.044152));
-    physicalPositions.push_back(Array<T,3>(0.027132, 0.049947, 0.095012));
-    physicalPositions.push_back(Array<T,3>(0.034398, 0.056487, 0.057957));
-    physicalPositions.push_back(Array<T,3>(0.031492, 0.025971, 0.084113));
-    physicalPositions.push_back(Array<T,3>(0.025679, 0.025971, 0.091379));
-    physicalPositions.push_back(Array<T,3>(0.018413, 0.011439, 0.076848));
-    positions.resize(physicalPositions.size());
-
-    for (pluint i=0; i<physicalPositions.size(); ++i) {
-        positions[i] = (physicalPositions[i]-location)/dx;
-    }
-
-    std::vector<Array<T,3> > velocities = velocitySingleProbes(lattice, positions);
-    std::vector<Array<T,3> > vorticities = vorticitySingleProbes(lattice, positions);
-    std::vector<T> densities = densitySingleProbes(lattice, positions);
-
-    std::vector<T> data;
-    for (pluint i=0; i<physicalPositions.size(); ++i) {
-        Array<T,3> pos = physicalPositions[i];
-        Array<T,3> vel = velocities[i]*dx/dt;
-        Array<T,3> vort = vorticities[i]/dt;
-        T pressure = DESCRIPTOR<T>::cs2*(densities[i]-1.)*dx*dx/(dt*dt)*fluidDensity;
-        if (performOutput) {
-            pcout << "Pos ("
-                  << pos[0] << "," << pos[1] << "," << pos[2]
-                  << "); Velocity ("
-                  << vel[0] << "," << vel[1] << "," << vel[2]
-                  << "); Vorticity ("
-                  << vort[0] << "," << vort[1] << "," << vort[2]
-                  << "); Pressure " << pressure << std::endl;
-        }
-        data.push_back(norm(vel));
-        data.push_back(norm(vort));
-        data.push_back(pressure);
-    }
-    return data;
-}
-
-void writeImages (
+void writeSlice (
          OffLatticeBoundaryCondition3D<T,DESCRIPTOR,Velocity>& boundaryCondition,
          Box3D const& imageDomain, Box3D const& vtkDomain, std::string fname, Array<T,3> location, T dx, T dt )
 {
-    VtkImageOutput3D<T> vtkOut(fname, dx, location);
-    vtkOut.writeData<float>(*boundaryCondition.computePressure(vtkDomain), "p", util::sqr(dx/dt)*fluidDensity);
-    vtkOut.writeData<float>(*boundaryCondition.computeVelocityNorm(vtkDomain), "u", dx/dt);
-    vtkOut.writeData<float>(*copyConvert<int,T>(*extractSubDomain(boundaryCondition.getVoxelizedDomain().getVoxelMatrix(),vtkDomain)), "voxel", 1.);
+    //VtkImageOutput3D<T> vtkOut(fname, dx, location);
+    //vtkOut.writeData<float>(*boundaryCondition.computePressure(vtkDomain), "p", util::sqr(dx/dt)*fluidDensity);
+    //vtkOut.writeData<float>(*boundaryCondition.computeVelocityNorm(vtkDomain), "u", dx/dt);
+    //vtkOut.writeData<float>(*copyConvert<int,T>(*extractSubDomain(boundaryCondition.getVoxelizedDomain().getVoxelMatrix(),vtkDomain)), "voxel", 1.);
 
     ImageWriter<T> imageWriter("leeloo");
     imageWriter.writeScaledPpm(fname, *boundaryCondition.computeVelocityNorm(imageDomain));
@@ -198,44 +165,44 @@ void writeImages (
     plint nx = boundaryCondition.getLattice().getNx();
     plint ny = boundaryCondition.getLattice().getNy();
     plint nz = boundaryCondition.getLattice().getNz();
-    Array<T,3> yz_plane(0.016960, 0.032604, 0.057772);
-    Array<T,3> xz_plane(0.026725, 0.017978, 0.057772);
-    Array<T,3> xy_plane(0.026725, 0.032604, 0.084113);
 
-    Array<T,3> lyz_plane((yz_plane-location)/dx);
-    Array<T,3> lxz_plane((xz_plane-location)/dx);
-    Array<T,3> lxy_plane((xy_plane-location)/dx);
+    plint x_pos = util::roundToInt((nx-1) * slicePosition[0]);
+    plint y_pos = util::roundToInt((nx-1) * slicePosition[1]);    
+    plint z_pos = util::roundToInt((nz-1) * slicePosition[2]);
+
+    plint vtk_slice_thickness = 6;
 
     Box3D yz_imageDomain (
-            util::roundToInt(lyz_plane[0]), util::roundToInt(lyz_plane[0]),
+            x_pos, x_pos,
             0, ny-1, 
             0, nz-1 );
+
     Box3D xz_imageDomain (
             0, nx-1,
-            util::roundToInt(lxz_plane[1]), util::roundToInt(lxz_plane[1]),
+            y_pos, y_pos,
             0, nz-1 );
+
     Box3D xy_imageDomain (
             0, nx-1, 
             0, ny-1,
-            util::roundToInt(lxy_plane[2]), util::roundToInt(lxy_plane[2]) );
-
+            z_pos, z_pos);
 
     Box3D yz_vtkDomain (
-            util::roundToInt(lyz_plane[0])-3, util::roundToInt(lyz_plane[0])+3,
+            x_pos - vtk_slice_thickness/2, x_pos + vtk_slice_thickness/2,
             0, ny-1, 
             0, nz-1 );
     Box3D xz_vtkDomain (
             0, nx-1,
-            util::roundToInt(lxz_plane[1])-3, util::roundToInt(lxz_plane[1])+3,
+            y_pos - vtk_slice_thickness/2, y_pos + vtk_slice_thickness/2,
             0, nz-1 );
     Box3D xy_vtkDomain (
             0, nx-1, 
             0, ny-1,
-            util::roundToInt(lxy_plane[2])-3, util::roundToInt(lxy_plane[2])+3 );
+            z_pos - vtk_slice_thickness/2, z_pos + vtk_slice_thickness/2 );
 
-    writeImages(boundaryCondition, xy_imageDomain, xy_vtkDomain, "xy_"+util::val2str(level)+"_"+util::val2str(iteration), location, dx, dt);
-    writeImages(boundaryCondition, xz_imageDomain, xz_vtkDomain, "xz_"+util::val2str(level)+"_"+util::val2str(iteration), location, dx, dt);
-    writeImages(boundaryCondition, yz_imageDomain, yz_vtkDomain, "yz_"+util::val2str(level)+"_"+util::val2str(iteration), location, dx, dt);
+    writeSlice(boundaryCondition, xy_imageDomain, xy_vtkDomain, "xy_"+util::val2str(level)+"_"+util::val2str(iteration), location, dx, dt);
+    writeSlice(boundaryCondition, xz_imageDomain, xz_vtkDomain, "xz_"+util::val2str(level)+"_"+util::val2str(iteration), location, dx, dt);
+    writeSlice(boundaryCondition, yz_imageDomain, yz_vtkDomain, "yz_"+util::val2str(level)+"_"+util::val2str(iteration), location, dx, dt);
 
     Box3D full_vtkDomain (
             0, nx-1, 
@@ -398,13 +365,9 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
                   << currentTime << endl;
 
             writeImages(boundaryCondition, level, out, location, dx, dt);
+
             ++out;
         }
-        // else {
-        //     pcout << "Current time of simulation is "
-        //           << iT*parameters.getDeltaT()
-        //           << "; data will be written after time 1 " << endl;
-        // }
 
         if (i%200==0 && performOutput) {
             pcout << "T= " << currentTime << "; "
@@ -477,14 +440,6 @@ std::auto_ptr<MultiBlockLattice3D<T,DESCRIPTOR> > run (
         pcout << "All data: ";
     }
     pcout << averageEnergy*volume << ", " << pressureDrop << ", " << rmsVorticity*volume*0.5 << ", ";
-    std::vector<T> pointData = pointMeasures(*lattice, location, dx, dt);
-    for (pluint i=0; i<pointData.size(); ++i) {
-        pcout << pointData[i];
-        if (i!=pointData.size()-1) {
-            pcout << ", ";
-        }
-    }
-    pcout << std::endl;
 
     return lattice;
 }
@@ -520,6 +475,32 @@ void readParameters(XMLreader const& document)
     document["simulation"]["poiseuilleInlet"].read(poiseuilleInlet);
     document["simulation"]["convectiveScaling"].read(convectiveScaling);
 
+    string directionString;
+    document["simulation"]["sliceDirection"].read(directionString);
+    if (directionString == "XY") 
+    {
+        sliceDirection = XYSliceDirection;
+    } 
+    else if (directionString == "XZ")
+    {
+        sliceDirection = XZSliceDirection;
+    }
+    else if (directionString == "YZ")
+    {
+        sliceDirection = YZSliceDirection;
+    }
+    else 
+    {
+        pcout << directionString << " is not a valid slice plane definition";
+        throw std::invalid_argument(directionString + " is not a valid slice plane definition");
+    }
+    
+    T slice_x, slice_y, slice_z;
+    document["simulation"]["slicePosition"]["X"].read(slice_x);
+    document["simulation"]["slicePosition"]["Y"].read(slice_y);
+    document["simulation"]["slicePosition"]["Z"].read(slice_z);
+    slicePosition = Array<T,3>(slice_x, slice_y, slice_z);
+
     // At this part, the surface geometry of the aneurysm (as given by the user in
     //   the form of an ASCII or binary STL file) is read into a data structure
     //   comprised by a set of triangles. The DBL constant means that double
@@ -549,9 +530,15 @@ void readParameters(XMLreader const& document)
     }
 }
 
+void signalHandler( int signum ) {
+   cout << "Interrupt received. Exiting.";
+   exit(signum);  
+}
 
 int main(int argc, char* argv[])
 {
+    signal(SIGTERM, signalHandler);   
+
     plbInit(&argc, &argv);
     global::directories().setOutputDir("./");
     global::IOpolicy().activateParallelIO(false);
@@ -610,4 +597,3 @@ int main(int argc, char* argv[])
         return -1;
     }
 }
-

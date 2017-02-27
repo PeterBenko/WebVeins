@@ -29,8 +29,7 @@ $output = $dir."/".OUTPUT;
 
 /////
 //COMMENT LINES TO ENABLE REAL FUNCTIONALITY
-
-$command = 'php';
+?><!--$command = 'php';
 
 fopen($output, "a") or die("Unable to open output file");
 $descriptorspec = array(
@@ -41,28 +40,32 @@ $descriptorspec = array(
 $process = proc_open('php', $descriptorspec, $pipes, $dir);
 
 fwrite($pipes[0], '<?php phpinfo(); ?>');
-fclose($pipes[0]);
+fclose($pipes[0]);-->
+<?php
 
 /////
 // UNCOMMENT FOLLOWING LINES FOR REAL FUNCTIONALITY
-//$command = BINARY_PATH . " " . PARAMETERS . " &"; // Let it run in the background
-//
-//$descriptorspec = array(
-//    1 => array("pipe", $output, "a"),
-//    2 => array("file", $output, "a")
-//);
-//$process = proc_open($command, $descriptorspec, $pipes, $dir) or die("Could not start process with command: ". $command );
+$command = "exec " . BINARY_PATH . " " . PARAMETERS; // Let it run in the background
 
+$descriptorspec = array(
+    1 => array("file", $output, "a"),
+    2 => array("file", $output, "a")
+);
+
+session_write_close();
+$process = proc_open($command, $descriptorspec, $pipes, $dir) or die("Could not start process with command: ". $command );
 /////
 // Remember the spawned processes
 $status = proc_get_status($process);
-$pid = $status["pid"];
+$ppid = $status["pid"];
+
 $pids = dirname(__FILE__) . "/" . PID_FOLDER;
 if (!file_exists($pids)) {
     mkdir($pids, 0777, true);
 }
-touch( $pids . $pid);
-echo "Command executed: " . $status["command"]  ." in " . $dir . " with PID: " . $pid . "<br/>";
+touch( $pids . $ppid);
+echo "Command executed: " . $status["command"]  ." in " . $dir . " with PID: " . $ppid . "<br/>";
+//proc_close($process)
 ?>
 
 

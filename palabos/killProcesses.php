@@ -8,18 +8,39 @@ $pidFiles = array_filter(scandir('./' . PID_FOLDER), function($item) {
 $allCount = count($pidFiles);
 $successCount = 0;
 
-foreach ($pidFiles as $pid) {
-    $pidVal = floatval($pid);
-    if (posix_getpgid($pidVal)){
-        if (!posix_kill ( $pidVal ,  SIGTERM )){
-            if(posix_kill($pidVal, SIGKILL)){
-                $successCount++;
-            }
-        }
-    } else {
+function pidIsActive($pid){
+    return posix_kill( $pid, 0);
+}
+
+function purge($pid) {
+    unlink(PID_FOLDER . $pid);
+}
+
+foreach ($pidFiles as $pid) 
+{
+    if (!pidIsActive($pid)) 
+    {
         $allCount--;
-        unlink(PID_FOLDER . $pid);
-        echo "Deleted inactive: " . $pidVal . "\n";
+        echo "Deleted inactive: " . $pid . "\n";
+        purge($pid);
+        continue;
+    }
+
+    $pidVal = floatval($pid);
+
+    if (posix_kill($pidVal, 15))
+    {
+        echo "SIGTERM'd $pidVal\n";
+        $successCount++;
+    } 
+    else 
+    {
+        echo "Could not kill $pidVal\n";
+    }
+
+    if (pidIsActive($pidVal))
+    {
+        purge($pidVal);
     }
 }
 

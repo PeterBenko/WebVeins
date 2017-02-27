@@ -49,6 +49,15 @@
 
     <performOutput>      True   </performOutput>
     <doImages>           True   </doImages>
+    <!-- Possible values are: XY, YZ, XZ-->
+    <sliceDirection>**_SLICE_DIRECTION_**</sliceDirection>
+    <!-- The position of the slice, in percent of the bounding box. Interval [0, 1]--> 
+    <slicePosition>
+        <X>**_SLICE_X_**</X>
+        <Y>**_SLICE_Y_**</Y>
+        <Z>**_SLICE_Z_**</Z>
+    </slicePosition>
+
     <!-- Extrapolation scheme for the off lattice boundary condition. -->
     <useAllDirections>   True   </useAllDirections>
     <!-- Use an off lattice boundary condition which is closer in spirit to
