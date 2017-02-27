@@ -36,6 +36,7 @@ function OpeningsManager(geometry, openingsTable){
         sphere.userData.isOutlet = true;
 
         sphere.position.set( center.x, center.y, center.z );
+        sphere.scale.set(2, 2, 2);
         // add the sphere to the parent object
         this.spheresParent.add( sphere );
     }
