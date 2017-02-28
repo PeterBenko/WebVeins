@@ -41,8 +41,6 @@ function OpeningsManager(geometry, openingsTable){
         this.spheresParent.add( sphere );
     }
 
-//            console.log(spheresParent);
-
     this.updateOpeningsTable = function(axisToSortBy){
         // Clear the table
         var tableViewModel = this.getOpenings( axisToSortBy );
@@ -50,6 +48,13 @@ function OpeningsManager(geometry, openingsTable){
 
         createTable(tableViewModel, axisToSortBy, minimum);
     };
+
+    this.setOpeningsScale = function( indicatorScale ) {
+        var spheres = this.spheresParent.children;
+        spheres.forEach( function( indicator ){
+            indicator.scale.set(indicatorScale, indicatorScale, indicatorScale);
+        });
+    }
 
     this.getOpenings = function( axisToSortBy ) {
         var openings = this.spheresParent.children;

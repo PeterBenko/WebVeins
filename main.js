@@ -100,10 +100,7 @@ function indicatorScaleChanged(sender, text)
     getLabel(sender.id).innerHTML = text + ": " + indicatorScale;
 
     if ( openingsManager ) {
-        var openings = openingsManager.spheresParent.children;
-        openings.forEach( function( indicator ){
-            indicator.scale.set(indicatorScale, indicatorScale, indicatorScale);
-        });
+        openingsManager.setOpeningsScale(indicatorScale);
     }
 }
 
@@ -114,14 +111,6 @@ function animate() {
 }
 
 function render() {
-
-//    var timer = Date.now() * 0.0005;
-//
-//    camera.position.x = Math.cos( timer ) * 3;
-//    camera.position.z = Math.sin( timer ) * 3;
-//
-//    camera.lookAt( cameraTarget );
-//
     renderer.render( scene, camera );
 }
 
@@ -132,36 +121,34 @@ function loadVein() {
     var material = new THREE.MeshLambertMaterial( { color: 0xFF0000, side: THREE.DoubleSide} );
     loader.load( stlToLoad, function ( veinGeometry ) {
         var vein = new THREE.Mesh( veinGeometry, material );
+        var box = new THREE.Box3().setFromObject( vein ); // Our model is above z=0, let's bring it to center 
 
-        var bbox = new THREE.Box3().setFromObject(vein);
-        var bboxGeometry = new THREE.BoxGeometry(
-                bbox.max.x - bbox.min.x,
-                bbox.max.y - bbox.min.y,
-                bbox.max.z - bbox.min.z
-            );
-        bboxGeometry.translate(
-            (bbox.max.x - bbox.min.x)/2 + bbox.min.x,
-            (bbox.max.y - bbox.min.y)/2 + bbox.min.y,
-            (bbox.max.z - bbox.min.z)/2 + bbox.min.z
-        );
-        var bboxWireframeGeometry = new THREE.EdgesGeometry( bboxGeometry ); // or WireframeGeometry( geometry )
-        var bboxMaterial = new THREE.LineBasicMaterial( {color: 0x0, transparent: true, opacity: 1.0} );
-        var bboxMesh = new THREE.LineSegments( bboxWireframeGeometry, bboxMaterial );
+        //allign box to positive octant
+        vein.translateX(- box.min.x);
+        vein.translateY(- box.min.y);
+        vein.translateZ(- box.min.z);
 
-        vein.translateZ(-(bbox.max.z - bbox.min.z)/2);
-        bboxMesh.translateZ(-(bbox.max.z - bbox.min.z)/2);
+        //move center to origin
+        vein.translateX(-(box.max.x - box.min.x) / 2);
+        vein.translateY(-(box.max.y - box.min.y) / 2);
+        vein.translateZ(-(box.max.z - box.min.z) / 2);
 
         vein.castShadow = true;
         vein.receiveShadow = true;
 
+        scene.add( loadSlice( vein ) );
         vein.add( loadOpenings( veinGeometry ) );
         scene.add( vein );
-    
-
-        scene.add ( bboxMesh );
 
         openingsManager.updateOpeningsTable(getAxisValue());
     } );
+}
+
+function loadSlice(mesh){
+    var sliceSelect = document.getElementById("slice-plane-selection");
+    var sliceSlider = document.getElementById("slice-position");
+    var sliceManager = new SliceManager(mesh, sliceSelect, sliceSlider);
+    return sliceManager.getBoundingBoxMesh();
 }
 
 function loadOpenings(geometry) {
@@ -180,7 +167,6 @@ function axisChanged(){
 function getAxisValue(){
     var axisSelector = document.getElementById("axis");
     var value = axisSelector.options[axisSelector.selectedIndex].value;
-    console.debug("Current axis: " + value);
     return value;
 }
 
