@@ -167,7 +167,7 @@ void writeImages (
     plint nz = boundaryCondition.getLattice().getNz();
 
     plint x_pos = util::roundToInt((nx-1) * slicePosition[0]);
-    plint y_pos = util::roundToInt((nx-1) * slicePosition[1]);    
+    plint y_pos = util::roundToInt((ny-1) * slicePosition[1]);    
     plint z_pos = util::roundToInt((nz-1) * slicePosition[2]);
 
     plint vtk_slice_thickness = 6;
