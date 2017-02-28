@@ -114,6 +114,7 @@ echo "Command executed: " . $status["command"]  ." in " . $dir . " with PID: " .
                 http.onreadystatechange = function() {
                     if (http.readyState == 4 && http.status == 200) {
                         consoleDiv.innerHTML = http.responseText
+                        consoleDiv.scrollTop = consoleDiv.scrollHeight;
                     }
                 };
                 var parameters = "filePath=./" + "<?= RESULTS_FOLDER . "/" . OUTPUT  ?>";
