@@ -70,6 +70,19 @@ echo "Command executed: " . $status["command"]  ." in " . $dir . " with PID: " .
 
 
 <html xmlns="http://www.w3.org/1999/html">
+    <style>
+        #console{
+            position: absolute;
+            border: 3px solid gray;
+            padding: 5px;
+            margin: 5px 0px;
+            background-color: lightgray;
+            width: 500px;
+            height: 400px;
+            overflow-y: scroll;
+            white-space: pre-wrap;
+        }
+    </style>
     <head>
         <title>WebVeins</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
@@ -79,7 +92,7 @@ echo "Command executed: " . $status["command"]  ." in " . $dir . " with PID: " .
         <script src="../httpCommunication.js"></script>
 
         <button onclick="killAll()">Kill process</button><br/>
-        <div id="console" style="background-color: lightgray"></div><br/>
+        <div id="console"></div><br/>
 
         <script>
             updateConsole();
