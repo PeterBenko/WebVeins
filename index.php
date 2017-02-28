@@ -57,7 +57,7 @@
             <button onclick="startCalculation()">Start calculation</button>
         </div>
 
-        <script src="main.js"</script>
+        <script src="main.js"></script>
         
         <script type="text/javascript">
 

@@ -104,13 +104,21 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 		updateIndicator();
 	}
 
-	sliceDirectionSelectElement.onchange = planeChanged;
+	sliceDirectionSelectElement.oninput = planeChanged;
 	planeChanged();
 
-	slicePositionElement.onchange = positionChanged;
+	slicePositionElement.oninput = positionChanged;
 	positionChanged();
 
 	this.getBoundingBoxMesh = function(){
 	    return boundingBoxMesh;
+	}
+
+	this.getSlicePosition = function() {
+		return slicePosition;
+	}
+
+	this.getSliceDirectionPlane = function() {
+		return sliceDirectionPlane;
 	}
 }

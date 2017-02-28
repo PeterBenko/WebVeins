@@ -3,7 +3,7 @@ var stlToLoad = './res/ourVein.stl';
 
 var container;
 var camera, controls, cameraTarget, scene, renderer, raycaster;
-var vein, openingsManager;
+var vein, openingsManager, sliceManager;
 
 var controlsWidth = 332;
 
@@ -147,7 +147,7 @@ function loadVein() {
 function loadSlice(mesh){
     var sliceSelect = document.getElementById("slice-plane-selection");
     var sliceSlider = document.getElementById("slice-position");
-    var sliceManager = new SliceManager(mesh, sliceSelect, sliceSlider);
+    sliceManager = new SliceManager(mesh, sliceSelect, sliceSlider);
     return sliceManager.getBoundingBoxMesh();
 }
 
@@ -194,10 +194,13 @@ function postOpenings() {
        params.push(row[0]);
     });
 
+    var sliceDirectionPlane = sliceManager.getSliceDirectionPlane();
+    var slicePosition = sliceManager.getSlicePosition();
+
     var toSend = "openings=" + JSON.stringify(params);
     toSend += "&axis=" + axis;
     toSend += "&velocity=" + velocity;
-    toSend += "&slice_direction=" + "XY";
-    toSend += "&slice_position=" + JSON.stringify({x: "0.5", y: "0.5", z: "0.5"});
+    toSend += "&slice_direction=" + sliceDirectionPlane;
+    toSend += "&slice_position=" + JSON.stringify({x: slicePosition.x, y: slicePosition.y, z: slicePosition.z});
     postAndAlert(url, toSend);
 }
