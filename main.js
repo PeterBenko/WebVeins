@@ -138,7 +138,7 @@ function loadVein() {
 
         scene.add( loadSlice( vein ) );
         vein.add( loadOpenings( veinGeometry ) );
-        scene.add( vein );
+        //scene.add( vein );
 
         openingsManager.updateOpeningsTable(getAxisValue());
     } );
@@ -203,4 +203,47 @@ function postOpenings() {
     toSend += "&slice_direction=" + sliceDirectionPlane;
     toSend += "&slice_position=" + JSON.stringify({x: slicePosition.x, y: slicePosition.y, z: slicePosition.z});
     postAndAlert(url, toSend);
+}
+
+function startCalculation() {
+
+    var consoleDiv = document.getElementById("console");
+
+    var http = new XMLHttpRequest();
+
+    http.open("POST", "./palabos/startCalculation.php", true);
+    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    http.onreadystatechange = function() {
+        if (http.readyState == 4) {
+            if(http.status == 200) {
+                console.log(http.responseText);
+            } else {
+                console.error(http);
+            }
+        }
+    };
+    var parameters = "filePath=./" + "<?= RESULTS_FOLDER . "/" . OUTPUT  ?>";
+    http.send(parameters);
+    
+    setTimeout(checkProcessRunning, 500);
+}
+
+function checkProcessRunning(){
+    
+    var consoleDiv = document.getElementById("console");
+
+    var http = new XMLHttpRequest();
+
+    http.open("POST", "./palabos/processRunningCheck.php", true);
+    http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    http.onreadystatechange = function() {
+        //if (http.readyState == 4 && http.status == 200) {
+        //    consoleDiv.innerHTML = http.responseText
+        //    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        //}
+    };
+    var parameters = "filePath=./" + "<?= RESULTS_FOLDER . "/" . OUTPUT  ?>";
+    http.send(parameters);
+    
+    setTimeout(checkProcessRunning, 500);
 }

@@ -154,7 +154,8 @@ void writeSlice (
     //vtkOut.writeData<float>(*copyConvert<int,T>(*extractSubDomain(boundaryCondition.getVoxelizedDomain().getVoxelMatrix(),vtkDomain)), "voxel", 1.);
 
     ImageWriter<T> imageWriter("leeloo");
-    imageWriter.writeScaledPpm(fname, *boundaryCondition.computeVelocityNorm(imageDomain));
+    //imageWriter.writeScaledPpm(fname, *boundaryCondition.computeVelocityNorm(imageDomain));
+    imageWriter.writeScaledGif(fname, *boundaryCondition.computeVelocityNorm(imageDomain));
 }
 
 // This function produces images at predefined yz, xz and xy planes. The coordinates of the planes are given

@@ -28,11 +28,19 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 
 	var createIndicator = function(geometry) {
 		var indicatorGeometry = geometry.clone();
-		var indicatorMesh = new THREE.Mesh(indicatorGeometry, new THREE.MeshBasicMaterial(
-		{
-		    color: 0xFFFFFF,
-		    side: THREE.DoubleSide,
-		}));
+
+		var material1 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+    	var material2 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+    	var material3 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+    	var material4 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+    	var material5 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+    	var material6 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+  
+	    var materials = [material1, material2, material3, material4, material5, material6];
+	  
+	    var meshFaceMaterial = new THREE.MeshFaceMaterial( materials );
+
+		var indicatorMesh = new THREE.Mesh(indicatorGeometry, meshFaceMaterial);
 		return indicatorMesh;
 	}
 

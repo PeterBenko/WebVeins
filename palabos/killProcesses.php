@@ -30,7 +30,7 @@ foreach ($pidFiles as $pid)
 
     if (posix_kill($pidVal, 15))
     {
-        echo "SIGTERM'd $pidVal\n";
+        echo "SIGTERMd $pidVal\n";
         $successCount++;
     } 
     else 
