@@ -29,16 +29,70 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 	var createIndicator = function(geometry) {
 		var indicatorGeometry = geometry.clone();
 
-		var material1 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
-    	var material2 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
-    	var material3 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
-    	var material4 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
-    	var material5 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
-    	var material6 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.jpg') } );
+		var material1 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.gif') } );
+    	var material2 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.gif') } );
+    	var material3 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xz_0_1201.gif') } );
+    	var material4 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xz_0_1201.gif') } );
+    	var material5 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xy_0_1201.gif') } );
+    	var material6 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xy_0_1201.gif') } );
   
 	    var materials = [material1, material2, material3, material4, material5, material6];
 	  
 	    var meshFaceMaterial = new THREE.MeshFaceMaterial( materials );
+	    console.log(indicatorGeometry);
+
+    	indicatorGeometry.faceVertexUvs[0][0] = [ 
+	    	new THREE.Vector2(1, 1), 
+	    	new THREE.Vector2(0, 1), 
+	    	new THREE.Vector2(1, 0)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][1] = [ 
+	    	new THREE.Vector2(0, 1), 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(1, 0)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][2] = [ 
+	    	new THREE.Vector2(1, 0), 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(1, 1)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][3] = [ 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(0, 1), 
+	    	new THREE.Vector2(1, 1)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][4] = [ 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(0, 1), 
+	    	new THREE.Vector2(1, 0)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][5] = [ 
+	    	new THREE.Vector2(0, 1), 
+	    	new THREE.Vector2(1, 1), 
+	    	new THREE.Vector2(1, 0)
+	    	];		
+    	indicatorGeometry.faceVertexUvs[0][8] = [ 
+	    	new THREE.Vector2(0, 1), 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(1, 1)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][9] = [ 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(1, 0), 
+	    	new THREE.Vector2(1, 1)
+	    	];		
+    	indicatorGeometry.faceVertexUvs[0][10] = [ 
+	    	new THREE.Vector2(1, 1), 
+	    	new THREE.Vector2(1, 0), 
+	    	new THREE.Vector2(0, 1)
+	    	];
+    	indicatorGeometry.faceVertexUvs[0][11] = [ 
+	    	new THREE.Vector2(1, 0), 
+	    	new THREE.Vector2(0, 0), 
+	    	new THREE.Vector2(0, 1)
+	    	];
+		
+		indicatorGeometry.uvsNeedUpdate = true; 
 
 		var indicatorMesh = new THREE.Mesh(indicatorGeometry, meshFaceMaterial);
 		return indicatorMesh;

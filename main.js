@@ -120,7 +120,7 @@ function loadVein() {
 //            var material = new THREE.MeshPhongMaterial( { color: 0xFF0000, specular: 0x111111, shininess: 200 } );
     var material = new THREE.MeshLambertMaterial( { color: 0xFF0000, side: THREE.DoubleSide} );
     loader.load( stlToLoad, function ( veinGeometry ) {
-        var vein = new THREE.Mesh( veinGeometry, material );
+        vein = new THREE.Mesh( veinGeometry, material );
         var box = new THREE.Box3().setFromObject( vein ); // Our model is above z=0, let's bring it to center 
 
         //allign box to positive octant
@@ -138,7 +138,7 @@ function loadVein() {
 
         scene.add( loadSlice( vein ) );
         vein.add( loadOpenings( veinGeometry ) );
-        //scene.add( vein );
+        scene.add( vein );
 
         openingsManager.updateOpeningsTable(getAxisValue());
     } );
@@ -226,6 +226,10 @@ function startCalculation() {
     http.send(parameters);
     
     setTimeout(checkProcessRunning, 500);
+}
+
+function showModelChanged(element) {
+    vein.visible = element.checked; 
 }
 
 function checkProcessRunning(){
