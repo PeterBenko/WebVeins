@@ -228,10 +228,6 @@ function startCalculation() {
     setTimeout(checkProcessRunning, 500);
 }
 
-function showModelChanged(element) {
-    vein.visible = element.checked; 
-}
-
 function checkProcessRunning(){
     
     var consoleDiv = document.getElementById("console");

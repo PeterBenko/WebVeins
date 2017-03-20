@@ -114,7 +114,6 @@
 
                 <button onclick="postOpenings()">Submit</button>
                 <button onclick="startCalculation()">Start calculation</button>
-                <input type="checkbox" name="showModel" onchange="showModelChanged(this)" checked>Show model <br>
             </div>
 
             <div id="console-wrapper" class="boxContent box">

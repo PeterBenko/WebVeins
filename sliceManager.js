@@ -2,6 +2,7 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 	var sliceDirectionPlane;
 	var positionValue = slicePositionElement.value;
 	var slicePosition = new THREE.Vector3( positionValue, positionValue, positionValue);;
+	var selectedTexture = 0;
 
 	var createBoundingBoxGeometry = function(veinMesh) {
 	    var bbox = new THREE.Box3().setFromObject(veinMesh);
@@ -26,20 +27,9 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 	    return boundingBoxMesh;
 	}
 
-	var createIndicator = function(geometry) {
+	var createIndicator = function(geometry, textureIndex) {
 		var indicatorGeometry = geometry.clone();
-
-		var material1 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.gif') } );
-    	var material2 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/yz_0_1201.gif') } );
-    	var material3 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xz_0_1201.gif') } );
-    	var material4 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xz_0_1201.gif') } );
-    	var material5 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xy_0_1201.gif') } );
-    	var material6 = new THREE.MeshBasicMaterial( { map: THREE.ImageUtils.loadTexture('res/xy_0_1201.gif') } );
-  
-	    var materials = [material1, material2, material3, material4, material5, material6];
-	  
-	    var meshFaceMaterial = new THREE.MeshFaceMaterial( materials );
-	    console.log(indicatorGeometry);
+	  	var material = getMaterial(textureIndex);
 
     	indicatorGeometry.faceVertexUvs[0][0] = [ 
 	    	new THREE.Vector2(1, 1), 
@@ -71,6 +61,7 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 	    	new THREE.Vector2(1, 1), 
 	    	new THREE.Vector2(1, 0)
 	    	];		
+	    // Faces 6 and 7 are actually fine
     	indicatorGeometry.faceVertexUvs[0][8] = [ 
 	    	new THREE.Vector2(0, 1), 
 	    	new THREE.Vector2(0, 0), 
@@ -94,8 +85,31 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 		
 		indicatorGeometry.uvsNeedUpdate = true; 
 
-		var indicatorMesh = new THREE.Mesh(indicatorGeometry, meshFaceMaterial);
+		var indicatorMesh = new THREE.Mesh(indicatorGeometry, material);
 		return indicatorMesh;
+	}
+
+	function getMaterial(index){
+		if (index > 0) {
+			var loader = new THREE.TextureLoader();
+			var material1 = new THREE.MeshBasicMaterial( { map: loader.load('palabos/results/yz_0_' + index + '.gif') } );
+	    	var material2 = new THREE.MeshBasicMaterial( { map: loader.load('palabos/results/yz_0_' + index + '.gif') } );
+	    	var material3 = new THREE.MeshBasicMaterial( { map: loader.load('palabos/results/xz_0_' + index + '.gif') } );
+	    	var material4 = new THREE.MeshBasicMaterial( { map: loader.load('palabos/results/xz_0_' + index + '.gif') } );
+	    	var material5 = new THREE.MeshBasicMaterial( { map: loader.load('palabos/results/xy_0_' + index + '.gif') } );
+	    	var material6 = new THREE.MeshBasicMaterial( { map: loader.load('palabos/results/xy_0_' + index + '.gif') } );
+	  
+		    var material = [material1, material2, material3, material4, material5, material6];
+
+		} else {
+			var dummyMaterial = new THREE.MeshBasicMaterial( {
+			    color: 0xffffff
+			} );
+		    var material = [dummyMaterial, dummyMaterial, dummyMaterial, dummyMaterial, dummyMaterial, dummyMaterial];
+		}
+
+    	var meshFaceMaterial = new THREE.MeshFaceMaterial( material );
+    	return meshFaceMaterial;
 	}
 
 	var boundingBoxGeometry = createBoundingBoxGeometry(veinMesh);
@@ -104,6 +118,10 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 	boundingBoxMesh.add(indicator);
 
 	var updateIndicator = function(){
+		// Update texture
+		indicator.material = getMaterial(selectedTexture);
+
+		// Update scale and position
 		switch(sliceDirectionPlane) {
     	case "XY":
         	indicator.scale.set(1, 1, 0.001);
@@ -164,6 +182,11 @@ function SliceManager(veinMesh, sliceDirectionSelectElement, slicePositionElemen
 
 		console.log(slicePosition);
 		updateIndicator();
+	}
+
+	this.sliceIndexChanged = function(newIndex){
+	    selectedTexture = newIndex;
+	    updateIndicator();
 	}
 
 	sliceDirectionSelectElement.oninput = planeChanged;

@@ -28,6 +28,10 @@
         #console-info {
             flex: 0 0 auto;
         }
+
+        #result-slider {
+            width: 100%;
+        }
     </style>
     <head>
         <title>WebVeins</title>
@@ -37,7 +41,11 @@
 
     <body>
         <div id="console-info">
-        <button onclick="killAll()">Kill process</button>
+            <button onclick="killAll()">Kill process</button>
+            <input type="checkbox" name="showModel" onchange="showModel(this.checked)" checked>Show model <br>
+            <label for="result-slider">Slice position:</label><br/>
+            <input  id="result-slider" type="range" min="0.0" max="0.0" step="1" value="0" oninput="resultIndexChanged(this.value)" />
+            <br/>   
         </div>
 
         <div id="console" onscroll="consoleScrolled()"></div><br/>
@@ -46,6 +54,10 @@
             var consoleDiv = document.getElementById("console");
             var lockScroll = true;
             updateConsole();
+
+            var resultSlider = document.getElementById("result-slider");
+            updateSlice();
+
             function killAll(){
                 var url = "./killProcesses.php";
                 postAndAlert(url, null);
@@ -66,8 +78,36 @@
                 }
             }
 
-            function updateConsole(){
+            function showModel(visible) {
+                parent.vein.visible = visible; 
+            }
 
+            function resultIndexChanged(value) {
+                parent.sliceManager.sliceIndexChanged(value);
+            }
+
+            function updateSlice(){
+
+                var http = new XMLHttpRequest();
+
+                http.open("POST", "./getImagesList.php", true);
+                http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                http.onreadystatechange = function() {
+                    if (http.readyState == 4 && http.status == 200) {
+                        var arrayOfFiles = JSON.parse( http.responseText);
+                        setResultCount(arrayOfFiles);
+                    }
+                };
+                http.send();
+                setTimeout(updateSlice, 500);
+            }
+
+            function setResultCount(files) {
+                var count = files.length / 3 // 1 for each axis  
+                resultSlider.max = count; 
+            }
+
+            function updateConsole(){
 
                 var http = new XMLHttpRequest();
 
