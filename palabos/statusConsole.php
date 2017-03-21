@@ -43,7 +43,7 @@
         <div id="console-info">
             <button onclick="killAll()">Kill process</button>
             <input type="checkbox" name="showModel" onchange="showModel(this.checked)" checked>Show model <br>
-            <label for="result-slider">Slice position:</label><br/>
+            <label for="result-slider">Displaying result slice:</label><br/>
             <input  id="result-slider" type="range" min="0.0" max="0.0" step="1" value="0" oninput="resultIndexChanged(this.value)" />
             <br/>   
         </div>
